@@ -27,4 +27,7 @@ class PUZZLEPLATFORMS_API AMovingPlatform : public AStaticMeshActor
 
 	UPROPERTY(EditAnywhere, Meta = (MakeEditWidget = true))
 	FVector TargetLocation_;
+
+	FVector GlobalTargetLocation_;
+	FVector GlobalStartLocation_;
 };
