@@ -11,6 +11,7 @@ AMovingPlatform::AMovingPlatform()
 	SetMobility(EComponentMobility::Movable);
 }
 
+
 void AMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
@@ -28,29 +29,44 @@ void AMovingPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//HasAuthority(); // true means server, false means client
-	if (!HasAuthority()) return;
+	if (ActiveTriggers > 0) {
 
-	FVector Location = GetActorLocation();
+		//HasAuthority(); // true means server, false means client
+		if (!HasAuthority()) return;
 
-    float JourneyLength = (GlobalTargetLocation_ - GlobalStartLocation_).Size();
-	float JourneyTravelled = (Location - GlobalStartLocation_).Size();
+		FVector Location = GetActorLocation();
 
-	if (JourneyTravelled >= JourneyLength) 
-	{
-	    auto swap = GlobalStartLocation_;
-		GlobalStartLocation_ = GlobalTargetLocation_;
-		GlobalTargetLocation_ = swap;
+		float JourneyLength = (GlobalTargetLocation_ - GlobalStartLocation_).Size();
+		float JourneyTravelled = (Location - GlobalStartLocation_).Size();
+
+		if (JourneyTravelled >= JourneyLength)
+		{
+			auto swap = GlobalStartLocation_;
+			GlobalStartLocation_ = GlobalTargetLocation_;
+			GlobalTargetLocation_ = swap;
+		}
+
+		FVector Direction = (GlobalTargetLocation_ - GlobalStartLocation_).GetSafeNormal();
+		Location += Speed_ * DeltaTime * Direction;
+		SetActorLocation(Location);
+
+		//if (FVector::PointsAreNear(Location, GlobalTargetLocation_, 1.0f)) {
+		//	auto tGlobalStartLocation_ = GlobalStartLocation_;
+		//	GlobalStartLocation_ = GlobalTargetLocation_;
+		//  GlobalTargetLocation_ = tGlobalStartLocation_;
+		//}
 	}
 
-	FVector Direction = (GlobalTargetLocation_ - GlobalStartLocation_).GetSafeNormal();
-	Location += Speed_ * DeltaTime * Direction;
-	SetActorLocation(Location);
+}
 
-	//if (FVector::PointsAreNear(Location, GlobalTargetLocation_, 1.0f)) {
-	//	auto tGlobalStartLocation_ = GlobalStartLocation_;
-    //	GlobalStartLocation_ = GlobalTargetLocation_;
-    //  GlobalTargetLocation_ = tGlobalStartLocation_;
-	//}
 
+void AMovingPlatform::AddActiveTrigger()
+{
+	ActiveTriggers++;
+}
+
+
+void AMovingPlatform::RemoveActiveTrigger()
+{
+	if (ActiveTriggers > 0) ActiveTriggers--;
 }
