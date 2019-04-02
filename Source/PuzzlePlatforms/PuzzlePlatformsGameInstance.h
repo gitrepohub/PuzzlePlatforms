@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "PuzzlePlatformsGameInstance.generated.h"
 
+#include "PuzzlePlatformsGameInstance.generated.h"
 /**
  * 
  */
@@ -16,5 +16,11 @@ class PUZZLEPLATFORMS_API UPuzzlePlatformsGameInstance : public UGameInstance
 	
 public:
 	UPuzzlePlatformsGameInstance(const FObjectInitializer & ObjectInitializer);
-	void Init();
+	virtual void Init();
+
+	UFUNCTION(Exec)
+	void Host();
+
+	UFUNCTION(Exec)
+	void Join(const FString &address);
 };

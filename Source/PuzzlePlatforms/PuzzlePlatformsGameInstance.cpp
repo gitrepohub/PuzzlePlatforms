@@ -2,6 +2,9 @@
 
 #include "PuzzlePlatformsGameInstance.h"
 
+#include "Engine/Engine.h"
+#include "GameFramework/PlayerController.h"
+
 UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitializer & ObjectInitializer)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UPuzzlePlatformsGameInstance"));
@@ -11,3 +14,37 @@ void UPuzzlePlatformsGameInstance::Init()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Init"));
 }
+
+
+void UPuzzlePlatformsGameInstance::Host()
+{
+	auto engine = GetEngine();
+
+	if (!ensure(engine != nullptr)) return;
+
+	// http://api.unrealengine.com/INT/API/Runtime/Engine/Engine/UEngine/AddOnScreenDebugMessage/2/index.html
+	engine->AddOnScreenDebugMessage(0, 2.f, FColor::Green, TEXT("Hosting"));
+
+	auto World = GetWorld();
+	if (!ensure(World != nullptr)) return;
+
+	World->ServerTravel("/Game/ThirdPersonCPP/Maps/ThirdPersonExampleMap?listen"); //?listen
+
+}
+
+void UPuzzlePlatformsGameInstance::Join(const FString & address)
+{
+	auto engine = GetEngine();
+
+	if (!ensure(engine != nullptr)) return;
+
+	// http://api.unrealengine.com/INT/API/Runtime/Engine/Engine/UEngine/AddOnScreenDebugMessage/2/index.html
+	engine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, FString::Printf(TEXT("Address is %s"), *address));
+
+	auto PlayerController = GetFirstLocalPlayerController();
+	if (!ensure(PlayerController != nullptr)) return;
+
+	PlayerController->ClientTravel(address, ETravelType::TRAVEL_Absolute);
+
+}
+
