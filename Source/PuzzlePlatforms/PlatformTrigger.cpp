@@ -4,6 +4,7 @@
 #include "Components/BoxComponent.h"
 
 #include "MovingPlatform.h"
+#include "OpenDoor.h"
 
 // Sets default values
 APlatformTrigger::APlatformTrigger()
@@ -46,6 +47,15 @@ void APlatformTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 		if (!ensure(MovingPlatforms != nullptr)) return;
 		MovingPlatforms->AddActiveTrigger();
 	}
+
+	for (auto OpenDoor : DoorsToTrigger)
+	{
+		if (!ensure(OpenDoor != nullptr)) return;
+
+		auto thedoor = OpenDoor->FindComponentByClass<UOpenDoor>();
+
+		thedoor->AddActiveTrigger();
+	}
 }
 
 
@@ -56,5 +66,13 @@ void APlatformTrigger::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor*
 	{
 		if (!ensure(MovingPlatform != nullptr)) return;
 		MovingPlatform->RemoveActiveTrigger();
+	}
+
+	for (auto OpenDoor : DoorsToTrigger)
+	{
+		if (!ensure(OpenDoor != nullptr)) return;
+		auto thedoor = OpenDoor->FindComponentByClass<UOpenDoor>();
+
+		thedoor->RemoveActiveTrigger();
 	}
 }
