@@ -5,6 +5,7 @@
 
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
+#include "Components/EditableTextBox.h"
 
 
 bool UMainMenu::Initialize()
@@ -15,9 +16,17 @@ bool UMainMenu::Initialize()
 
 	if (!ensure(HostButton != nullptr)) return false;
 	if (!ensure(JoinButton != nullptr)) return false;
+	if (!ensure(BackButton != nullptr)) return false;
 
+
+	// Main Menu buttons
 	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
+
+	// Join Menu buttons
+	BackButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
+	PlayButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
+
 
 	return true;
 }
@@ -81,12 +90,40 @@ void UMainMenu::HostServer()
 }
 
 
-void UMainMenu::OpenJoinMenu()
+void UMainMenu::JoinServer()
 {
 	UE_LOG(LogTemp, Warning, TEXT("JoinServer called"));
+	if (!ensure(IPAddressField != nullptr)) return;
+	if (MenuInterface == nullptr) return;
+
+	// TextWidget 
+	auto ipaddress = IPAddressField->GetText().ToString();
+	if (ipaddress == "" || ipaddress.Len() < 7) return;
+
+	MenuInterface->Join(ipaddress);
+
+}
+
+
+void UMainMenu::OpenJoinMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OpenJoinMenu called"));
 
 	if (!ensure(MenuSwitcher != nullptr)) return;
+	if (!ensure(JoinMenu != nullptr)) return;
 
-	MenuSwitcher->SetActiveWidget(nullptr);
+	MenuSwitcher->SetActiveWidget(JoinMenu);
+
+}
+
+
+void UMainMenu::OpenMainMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OpenMainMenu called"));
+
+	if (!ensure(MenuSwitcher != nullptr)) return;
+	if (!ensure(MainMenu != nullptr)) return;
+
+	MenuSwitcher->SetActiveWidget(MainMenu);
 
 }
