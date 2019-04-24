@@ -9,6 +9,7 @@
 
 #include "PlatformTrigger.h"
 #include "MenuSystem/MainMenu.h"
+#include "MenuSystem/MenuWidget.h"
 
 UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitializer & ObjectInitializer)
 {
@@ -16,8 +17,12 @@ UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitiali
 	ConstructorHelpers::FClassFinder<UUserWidget> WBPMainMenuBPClass(TEXT("/Game/MenuSystem/WBP_MainMenu"));
 	if (!ensure(WBPMainMenuBPClass.Class != nullptr)) return;
 
-
 	MenuClass = WBPMainMenuBPClass.Class;
+
+	ConstructorHelpers::FClassFinder<UUserWidget> WBPInGameMenuBPClass(TEXT("/Game/MenuSystem/WBP_GameMenuSystem"));
+	if (!ensure(WBPInGameMenuBPClass.Class != nullptr)) return;
+
+	InGameMenuClass = WBPInGameMenuBPClass.Class;
 
 }
 
@@ -34,7 +39,20 @@ void UPuzzlePlatformsGameInstance::LoadMenu()
 {
 	if (!ensure(MenuClass != nullptr)) return;
 
-	auto menu = CreateWidget<UMainMenu>(this, MenuClass);
+	Menu = CreateWidget<UMainMenu>(this, MenuClass);
+	if (!ensure(Menu != nullptr)) return;
+
+	Menu->Setup();
+	Menu->SetMenuInterface(this);
+
+
+}
+
+void UPuzzlePlatformsGameInstance::InGameLoadMenu()
+{
+	if (!ensure(InGameMenuClass != nullptr)) return;
+
+	auto menu = CreateWidget<UMenuWidget>(this, InGameMenuClass);
 	if (!ensure(menu != nullptr)) return;
 
 	menu->Setup();

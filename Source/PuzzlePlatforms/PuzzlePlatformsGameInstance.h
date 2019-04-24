@@ -23,6 +23,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LoadMenu();
 
+
+	UFUNCTION(BlueprintCallable)
+	void InGameLoadMenu();
+
 	UFUNCTION(Exec)
 	virtual void Host() override;
 
@@ -31,4 +35,7 @@ public:
 
 private:
 	TSubclassOf<class UUserWidget> MenuClass = nullptr;
+	TSubclassOf<class UUserWidget> InGameMenuClass = nullptr;
+
+	class UMainMenu* Menu = nullptr;
 };
