@@ -20,7 +20,6 @@ bool UGameMenuSystem::Initialize()
 	CancelButton->OnClicked.AddDynamic(this, &UGameMenuSystem::CancelGameMenu);
 	MainMenuButton->OnClicked.AddDynamic(this, &UGameMenuSystem::OpenMainMenu);
 
-
 	return true;
 }
 
@@ -28,11 +27,18 @@ void UGameMenuSystem::OpenMainMenu()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OpenMainMenu called"));
 
+	if (MenuInterface == nullptr) return;
+	Teardown();
+
+	MenuInterface->OpenMainMenu();
+
 }
 
 
 void UGameMenuSystem::CancelGameMenu()
 {
 	UE_LOG(LogTemp, Warning, TEXT("CancelGameMenu called"));
+
+	Teardown();
 
 }

@@ -94,3 +94,24 @@ void UPuzzlePlatformsGameInstance::Join(const FString & address)
 
 }
 
+
+void UPuzzlePlatformsGameInstance::OpenMainMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UPuzzlePlatformsGameInstance OpenMainMenu called"));
+
+	auto PlayerController = GetFirstLocalPlayerController();
+	if (!ensure(PlayerController != nullptr)) return;
+
+	PlayerController->ClientTravel("/Game/MenuSystem/MainMenuLevel_BP", ETravelType::TRAVEL_Absolute);
+}
+
+
+void UPuzzlePlatformsGameInstance::QuitGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UPuzzlePlatformsGameInstance QuitGame called"));
+
+	auto PlayerController = GetFirstLocalPlayerController();
+	if (!ensure(PlayerController != nullptr)) return;
+
+	PlayerController->ConsoleCommand("quit");
+}

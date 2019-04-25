@@ -14,15 +14,20 @@ bool UMainMenu::Initialize()
 
 	if (!Success) return false;
 
+	// Main Menu Buttons
 	if (!ensure(HostButton != nullptr)) return false;
 	if (!ensure(JoinButton != nullptr)) return false;
+	if (!ensure(QuitButton != nullptr)) return false;
+
+	// Join Menu Buttons
 	if (!ensure(BackButton != nullptr)) return false;
 	if (!ensure(PlayButton != nullptr)) return false;
-
 
 	// Main Menu buttons
 	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
+	QuitButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
+
 
 	// Join Menu buttons
 	BackButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
@@ -40,6 +45,16 @@ void UMainMenu::HostServer()
 	if (MenuInterface == nullptr) return;
 
 	MenuInterface->Host();
+
+}
+
+void UMainMenu::QuitGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("QuitGame called"));
+
+	if (MenuInterface == nullptr) return;
+
+	MenuInterface->QuitGame();
 
 }
 

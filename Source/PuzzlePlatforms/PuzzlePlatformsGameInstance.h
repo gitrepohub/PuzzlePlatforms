@@ -33,6 +33,10 @@ public:
 	UFUNCTION(Exec)
 	virtual void Join(const FString &address) override;
 
+	virtual void OpenMainMenu() override;
+	virtual void QuitGame() override;
+
+
 private:
 	TSubclassOf<class UUserWidget> MenuClass = nullptr;
 	TSubclassOf<class UUserWidget> InGameMenuClass = nullptr;

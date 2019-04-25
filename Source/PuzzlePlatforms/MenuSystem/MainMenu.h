@@ -32,6 +32,9 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* PlayButton = nullptr;
 
+	UPROPERTY(meta = (BindWidget))
+	class UButton* QuitButton = nullptr;
+
 	// IP Address Text Widget
 	UPROPERTY(meta = (BindWidget))
 	class UEditableTextBox* IPAddressField = nullptr;
@@ -49,16 +52,21 @@ private:
 
 
 	// Callback functions
+	// Main Menu
 	UFUNCTION()
 	void HostServer();
-
-	UFUNCTION()
-	void JoinServer();
 
 	UFUNCTION()
 	void OpenJoinMenu();
 
 	UFUNCTION()
+	void QuitGame();
+
+	// Join
+	UFUNCTION()
 	void OpenMainMenu();
+
+	UFUNCTION()
+	void JoinServer();
 
 };

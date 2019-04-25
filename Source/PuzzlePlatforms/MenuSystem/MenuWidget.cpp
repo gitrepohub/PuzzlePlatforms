@@ -11,6 +11,7 @@ void UMenuWidget::SetMenuInterface(IMenuInterface* NewMenuInterface)
 
 void UMenuWidget::Setup()
 {
+	/*
 	auto World = GetWorld();
 
 	if (!ensure(World != nullptr)) return;
@@ -27,11 +28,33 @@ void UMenuWidget::Setup()
 	//InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 
 	this->SetUserFocus(PlayerController);
+	*/
+
+
+	this->AddToViewport();
+	this->bIsFocusable = true;
+
+	UWorld* World = GetWorld();
+
+	if (!ensure(World != nullptr)) return;
+
+	APlayerController * PlayerController = World->GetFirstPlayerController();
+
+	if (!ensure(PlayerController != nullptr)) return;
+
+	FInputModeUIOnly InputModeData;
+	InputModeData.SetWidgetToFocus(this->TakeWidget());
+	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+	PlayerController->SetInputMode(InputModeData);
+	PlayerController->bShowMouseCursor = true;
 }
 
 
 void UMenuWidget::Teardown()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Teardown called"));
+
 	this->RemoveFromViewport();
 
 	UWorld* World = GetWorld();
