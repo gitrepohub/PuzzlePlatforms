@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "OnlineSubsystem.h"
 
 #include "MenuSystem/MenuInterface.h"
 
@@ -18,6 +19,8 @@ class PUZZLEPLATFORMS_API UPuzzlePlatformsGameInstance : public UGameInstance, p
 	
 public:
 	UPuzzlePlatformsGameInstance(const FObjectInitializer & ObjectInitializer);
+	~UPuzzlePlatformsGameInstance();
+
 	virtual void Init();
 
 	UFUNCTION(BlueprintCallable)
@@ -40,6 +43,13 @@ public:
 private:
 	TSubclassOf<class UUserWidget> MenuClass = nullptr;
 	TSubclassOf<class UUserWidget> InGameMenuClass = nullptr;
-
+	IOnlineSessionPtr SessionInterface = nullptr;
 	class UMainMenu* Menu = nullptr;
+	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
+
+	void CreateSession();
+
+	void OnCreateSessionComplete(FName name, bool res);
+	void OnDestroySessionComplete(FName name, bool res);
+	void OnFindSessionsComplete(bool res);
 };
