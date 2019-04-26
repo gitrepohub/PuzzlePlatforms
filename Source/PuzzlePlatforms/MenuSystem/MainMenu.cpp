@@ -6,6 +6,21 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableTextBox.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Components/TextBlock.h"
+#include "OnlineSessionSettings.h"
+
+#include "ServerRow.h"
+
+
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
+{
+	UE_LOG(LogTemp, Warning, TEXT("UMainMenu"));
+	ConstructorHelpers::FClassFinder<UUserWidget> WBPServerRowBPClass(TEXT("/Game/MenuSystem/WBP_ServerRow"));
+	if (!ensure(WBPServerRowBPClass.Class != nullptr)) return;
+
+	ServerRowClass = WBPServerRowBPClass.Class;
+}
 
 
 bool UMainMenu::Initialize()
@@ -62,16 +77,56 @@ void UMainMenu::QuitGame()
 void UMainMenu::JoinServer()
 {
 	UE_LOG(LogTemp, Warning, TEXT("JoinServer called"));
-	if (!ensure(IPAddressField != nullptr)) return;
+
+	if (SelectedIndex.IsSet())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SelectedIndex: %d"), SelectedIndex.GetValue());
+
+	} else {
+		UE_LOG(LogTemp, Warning, TEXT("SelectedIndex Not Set"));
+		return;
+	}
+	if (!ensure(ServerList != nullptr)) return;
 	if (MenuInterface == nullptr) return;
 
 	// TextWidget 
-	const FString& ipaddress = IPAddressField->GetText().ToString();
-	if (ipaddress == "" || ipaddress.Len() < 7) return;
+	//const FString& ipaddress = IPAddressField->GetText().ToString();
+	//if (ipaddress == "" || ipaddress.Len() < 7) return;
+	//MenuInterface->Join(ipaddress);
 
-	MenuInterface->Join(ipaddress);
-
+	MenuInterface->Join(SelectedIndex.GetValue());
 }
+
+
+void UMainMenu::SelectIndex(uint32 Index)
+{
+	SelectedIndex = Index;
+}
+
+
+void UMainMenu::SetServerList(TArray<FOnlineSessionSearchResult>& ServerNames)
+{
+
+	if (!ensure(ServerRowClass != nullptr)) return;
+	if (!ensure(ServerList != nullptr)) return;
+	ServerList->ClearChildren();
+
+	uint32 i = 0;
+	for (const FOnlineSessionSearchResult& ServerName : ServerNames)
+	{
+		
+		auto ServerRow = CreateWidget<UServerRow>(this, ServerRowClass);
+		if (!ensure(ServerRow != nullptr)) return;
+		if (!ensure(ServerRow->ServerName != nullptr)) return;
+		
+
+		ServerRow->ServerName->SetText(FText::FromString(ServerName.GetSessionIdStr()));
+		ServerRow->Setup(this, i);
+		++i;
+		ServerList->AddChild(ServerRow);
+	}
+}
+
 
 
 void UMainMenu::OpenJoinMenu()
@@ -82,6 +137,9 @@ void UMainMenu::OpenJoinMenu()
 	if (!ensure(JoinMenu != nullptr)) return;
 
 	MenuSwitcher->SetActiveWidget(JoinMenu);
+
+	if (MenuInterface == nullptr) return;
+	MenuInterface->RefreshServerList();
 
 }
 

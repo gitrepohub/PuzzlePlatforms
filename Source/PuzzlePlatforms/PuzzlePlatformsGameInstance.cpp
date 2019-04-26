@@ -8,7 +8,6 @@
 #include "Blueprint/UserWidget.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
-#include "OnlineSessionInterface.h"
 
 #include "PlatformTrigger.h"
 #include "MenuSystem/MainMenu.h"
@@ -19,7 +18,7 @@ const static FName SESSION_NAME = TEXT("My Session Game");
 
 UPuzzlePlatformsGameInstance::~UPuzzlePlatformsGameInstance()
 {
-	UE_LOG(LogTemp, Warning, TEXT("distroy"));
+	UE_LOG(LogTemp, Warning, TEXT("destroy"));
 
 }
 
@@ -61,6 +60,8 @@ void UPuzzlePlatformsGameInstance::Init()
 	SessionInterface->OnCreateSessionCompleteDelegates.Clear();
 	SessionInterface->OnDestroySessionCompleteDelegates.Clear();
 	SessionInterface->OnFindSessionsCompleteDelegates.Clear();
+	SessionInterface->OnJoinSessionCompleteDelegates.Clear();
+
 
 	FDelegateHandle res = SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UPuzzlePlatformsGameInstance::OnCreateSessionComplete);
 	if (!res.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("OnCreateSessionCompleteDelegates FDelegateHandle not valid")); return; }
@@ -71,13 +72,27 @@ void UPuzzlePlatformsGameInstance::Init()
 	res = SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UPuzzlePlatformsGameInstance::OnFindSessionsComplete);
 	if (!res.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("OnFindSessionsCompleteDelegates FDelegateHandle not valid")); return; }
 
+	res = SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UPuzzlePlatformsGameInstance::OnJoinSessionComplete);
+	if (!res.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete FDelegateHandle not valid")); return; }
+
+
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+
+}
+
+void UPuzzlePlatformsGameInstance::RefreshServerList()
+{
 	if (SessionSearch.IsValid()) {
+		EOnlineAsyncTaskState::Type state = SessionSearch->SearchState;
+		if (state == EOnlineAsyncTaskState::InProgress) {
+			UE_LOG(LogTemp, Warning, TEXT("Already InProgress"));
+			return;
+		}
+
 		UE_LOG(LogTemp, Warning, TEXT("Starting Find Session"));
 		SessionSearch->bIsLanQuery = true;
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
-
 }
 
 
@@ -153,6 +168,10 @@ void UPuzzlePlatformsGameInstance::OnFindSessionsComplete(bool res)
 		UE_LOG(LogTemp, Warning, TEXT("Found: %s"), *result.GetSessionIdStr());
 	}
 
+	if (Menu == nullptr) return;
+
+	Menu->SetServerList(SessionSearch->SearchResults);
+
 }
 
 
@@ -184,20 +203,53 @@ void UPuzzlePlatformsGameInstance::OnDestroySessionComplete(FName name, bool res
 }
 
 
-void UPuzzlePlatformsGameInstance::Join(const FString & address)
+void UPuzzlePlatformsGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete"));
+
+	if (Result != EOnJoinSessionCompleteResult::Success) { 
+		UE_LOG(LogTemp, Warning, TEXT("Result is not success"));
+		return;
+	}
+
+	if (!SessionInterface.IsValid()) {
+		UE_LOG(LogTemp, Warning, TEXT("SessionInterface is not valid"));
+
+		return;
+	}
+
+	FString ConnectInfo = "";
+
+	bool bResult = SessionInterface->GetResolvedConnectString(SessionName, ConnectInfo);
+	if (!bResult) {
+		UE_LOG(LogTemp, Warning, TEXT("GetResolvedConnectString failed"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("GetResolvedConnectString got %s"), *ConnectInfo);
+
+
 	auto engine = GetEngine();
 
 	if (!ensure(engine != nullptr)) return;
 
-	// http://api.unrealengine.com/INT/API/Runtime/Engine/Engine/UEngine/AddOnScreenDebugMessage/2/index.html
-	engine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, FString::Printf(TEXT("Address is %s"), *address));
+	engine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, FString::Printf(TEXT("Address is %s"), *ConnectInfo));
 
 	auto PlayerController = GetFirstLocalPlayerController();
 	if (!ensure(PlayerController != nullptr)) return;
 
-	PlayerController->ClientTravel(address, ETravelType::TRAVEL_Absolute);
+	PlayerController->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);
+}
 
+
+void UPuzzlePlatformsGameInstance::Join(const uint32& index)
+{
+	UE_LOG(LogTemp, Warning, TEXT("UPuzzlePlatformsGameInstance Join called with %i"), index);
+
+	if (!SessionInterface.IsValid()) return;
+	if (!SessionSearch.IsValid()) return;
+
+	bool bResult = SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[index]);
 }
 
 
