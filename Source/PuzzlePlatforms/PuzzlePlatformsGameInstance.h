@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSessionInterface.h"
 
 #include "MenuSystem/MenuInterface.h"
 
@@ -34,10 +35,12 @@ public:
 	virtual void Host() override;
 
 	UFUNCTION(Exec)
-	virtual void Join(const FString &address) override;
+	virtual void Join(const uint32& index) override;
+
 
 	virtual void OpenMainMenu() override;
 	virtual void QuitGame() override;
+	virtual void RefreshServerList() override;
 
 
 private:
@@ -52,4 +55,5 @@ private:
 	void OnCreateSessionComplete(FName name, bool res);
 	void OnDestroySessionComplete(FName name, bool res);
 	void OnFindSessionsComplete(bool res);
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 };
