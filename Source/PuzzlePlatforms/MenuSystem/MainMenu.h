@@ -3,9 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
-
-#include "MenuInterface.h"
+#include "MenuWidget.h"
 
 #include "MainMenu.generated.h"
 
@@ -13,20 +11,15 @@
  * 
  */
 UCLASS()
-class PUZZLEPLATFORMS_API UMainMenu : public UUserWidget
+class PUZZLEPLATFORMS_API UMainMenu : public UMenuWidget
 {
 	GENERATED_BODY()
 
-public:
-	void SetMenuInterface(IMenuInterface* NewMenuInterface);
-	void Setup();
-
-
 protected:
 	virtual bool Initialize() override;
-	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
 
 private:
+	// Menu Buttons
 	UPROPERTY(meta = (BindWidget))
 	class UButton* HostButton = nullptr;
 
@@ -34,17 +27,46 @@ private:
 	class UButton* JoinButton = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
+	class UButton* BackButton = nullptr;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* PlayButton = nullptr;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* QuitButton = nullptr;
+
+	// IP Address Text Widget
+	UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox* IPAddressField = nullptr;
+
+	// Menu Switchers
+	UPROPERTY(meta = (BindWidget))
 	class UWidgetSwitcher* MenuSwitcher = nullptr;
+
+	// Menus
+	UPROPERTY(meta = (BindWidget))
+    class UWidget* MainMenu = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* JoinMenu = nullptr;
 
+
+	// Callback functions
+	// Main Menu
 	UFUNCTION()
 	void HostServer();
 
 	UFUNCTION()
 	void OpenJoinMenu();
 
-	IMenuInterface* MenuInterface = nullptr;
+	UFUNCTION()
+	void QuitGame();
+
+	// Join
+	UFUNCTION()
+	void OpenMainMenu();
+
+	UFUNCTION()
+	void JoinServer();
 
 };

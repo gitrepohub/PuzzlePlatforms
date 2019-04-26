@@ -5,6 +5,7 @@
 
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
+#include "Components/EditableTextBox.h"
 
 
 bool UMainMenu::Initialize()
@@ -13,60 +14,27 @@ bool UMainMenu::Initialize()
 
 	if (!Success) return false;
 
+	// Main Menu Buttons
 	if (!ensure(HostButton != nullptr)) return false;
 	if (!ensure(JoinButton != nullptr)) return false;
+	if (!ensure(QuitButton != nullptr)) return false;
 
+	// Join Menu Buttons
+	if (!ensure(BackButton != nullptr)) return false;
+	if (!ensure(PlayButton != nullptr)) return false;
+
+	// Main Menu buttons
 	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
+	QuitButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
+
+
+	// Join Menu buttons
+	BackButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
+	PlayButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
+
 
 	return true;
-}
-
-
-void UMainMenu::SetMenuInterface(IMenuInterface* NewMenuInterface)
-{
-	this->MenuInterface = NewMenuInterface;
-}
-
-
-void UMainMenu::Setup()
-{
-	auto World = GetWorld();
-
-	if (!ensure(World != nullptr)) return;
-
-	this->bIsFocusable = true;
-	this->AddToViewport();
-
-	auto PlayerController = World->GetFirstPlayerController();
-	if (!ensure(PlayerController != nullptr)) return;
-	PlayerController->bShowMouseCursor = true;
-
-	//FInputModeUIOnly InputMode;
-	//InputMode.SetWidgetToFocus(this->TakeWidget());
-	//InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-	this->SetUserFocus(PlayerController);
-}
-
-
-void UMainMenu::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnLevelRemovedFromWorld called"));
-
-	this->RemoveFromViewport();
-
-	if (InWorld) {
-		auto PlayerController = InWorld->GetFirstPlayerController();
-		if (!ensure(PlayerController != nullptr)) return;
-
-		FInputModeGameOnly inputMode;
-		PlayerController->SetInputMode(inputMode);
-		PlayerController->bShowMouseCursor = false;
-	}
-
-	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
-
 }
 
 
@@ -80,13 +48,51 @@ void UMainMenu::HostServer()
 
 }
 
+void UMainMenu::QuitGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("QuitGame called"));
+
+	if (MenuInterface == nullptr) return;
+
+	MenuInterface->QuitGame();
+
+}
+
+
+void UMainMenu::JoinServer()
+{
+	UE_LOG(LogTemp, Warning, TEXT("JoinServer called"));
+	if (!ensure(IPAddressField != nullptr)) return;
+	if (MenuInterface == nullptr) return;
+
+	// TextWidget 
+	const FString& ipaddress = IPAddressField->GetText().ToString();
+	if (ipaddress == "" || ipaddress.Len() < 7) return;
+
+	MenuInterface->Join(ipaddress);
+
+}
+
 
 void UMainMenu::OpenJoinMenu()
 {
-	UE_LOG(LogTemp, Warning, TEXT("JoinServer called"));
+	UE_LOG(LogTemp, Warning, TEXT("OpenJoinMenu called"));
 
 	if (!ensure(MenuSwitcher != nullptr)) return;
+	if (!ensure(JoinMenu != nullptr)) return;
 
-	MenuSwitcher->SetActiveWidget(nullptr);
+	MenuSwitcher->SetActiveWidget(JoinMenu);
+
+}
+
+
+void UMainMenu::OpenMainMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OpenMainMenu called"));
+
+	if (!ensure(MenuSwitcher != nullptr)) return;
+	if (!ensure(MainMenu != nullptr)) return;
+
+	MenuSwitcher->SetActiveWidget(MainMenu);
 
 }
