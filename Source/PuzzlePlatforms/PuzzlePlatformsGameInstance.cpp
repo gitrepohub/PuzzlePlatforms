@@ -90,7 +90,9 @@ void UPuzzlePlatformsGameInstance::RefreshServerList()
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Starting Find Session"));
-		SessionSearch->bIsLanQuery = true;
+		//SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
 }
@@ -129,11 +131,12 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 	if (!SessionInterface.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("session not valid")); return; }
 
 	FOnlineSessionSettings SessionSettings;
-	SessionSettings.bIsLANMatch = true;
+	SessionSettings.bIsLANMatch = false; // true;
 	SessionSettings.NumPublicConnections = 2;
 	SessionSettings.bShouldAdvertise = true;
+	SessionSettings.bUsesPresence = true;
 
-	auto bres = SessionInterface->CreateSession(0, TEXT("My Session Game"), SessionSettings);
+	auto bres = SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
 
 	if (!bres) { UE_LOG(LogTemp, Warning, TEXT("Could not create session")); return; }
 }
