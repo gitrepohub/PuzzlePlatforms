@@ -9,6 +9,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/TextBlock.h"
 #include "OnlineSessionSettings.h"
+#include <string>
 
 #include "ServerRow.h"
 
@@ -38,8 +39,13 @@ bool UMainMenu::Initialize()
 	if (!ensure(BackButton != nullptr)) return false;
 	if (!ensure(PlayButton != nullptr)) return false;
 
+	// Host Menu Buttons
+	if (!ensure(SBackButton != nullptr)) return false;
+	if (!ensure(SHostButton != nullptr)) return false;
+
+
 	// Main Menu buttons
-	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+	HostButton->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu);
 	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
 	QuitButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
 
@@ -47,6 +53,10 @@ bool UMainMenu::Initialize()
 	// Join Menu buttons
 	BackButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
 	PlayButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
+
+	// Host Menu buttons
+	SBackButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
+	SHostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 
 
 	return true;
@@ -58,8 +68,9 @@ void UMainMenu::HostServer()
 	UE_LOG(LogTemp, Warning, TEXT("HostServer called"));
 	
 	if (MenuInterface == nullptr) return;
+	if (HostName == nullptr) return;
 
-	MenuInterface->Host();
+	MenuInterface->Host(HostName->Text.ToString());
 
 }
 
@@ -101,18 +112,47 @@ void UMainMenu::JoinServer()
 void UMainMenu::SelectIndex(uint32 Index)
 {
 	SelectedIndex = Index;
+
+	UpdateChildren();
 }
 
 
-void UMainMenu::SetServerList(TArray<FOnlineSessionSearchResult>& ServerNames)
+void UMainMenu::UpdateChildren()
+{
+	for (int32 i = 0; i < ServerList->GetChildrenCount(); ++i)
+	{
+		auto row = Cast<UServerRow>(ServerList->GetChildAt(i));
+		if (row == nullptr) return;
+		row->Selected = (SelectedIndex.IsSet() && SelectedIndex.GetValue() == i);
+	}
+}
+
+
+void UMainMenu::SetServerList(TArray<FServerData>& ServerNames)
 {
 
 	if (!ensure(ServerRowClass != nullptr)) return;
 	if (!ensure(ServerList != nullptr)) return;
 	ServerList->ClearChildren();
 
+	if (ServerNames.Num() <= 0) {
+		uint32 i = 0;
+
+		while (i < 4) {
+			FString Testing = "Testing ";
+			auto IntString = FString::FromInt(i);
+			Testing += IntString;
+			auto ServerRow = CreateWidget<UServerRow>(this, ServerRowClass);
+			ServerRow->ServerName->SetText(FText::FromString(Testing));
+			ServerRow->Setup(this, i);
+			++i;
+			ServerList->AddChild(ServerRow);
+		}
+		return;
+	}
+
 	uint32 i = 0;
-	for (const FOnlineSessionSearchResult& ServerName : ServerNames)
+	for (const auto& ServerData : ServerNames)
 	{
 		
 		auto ServerRow = CreateWidget<UServerRow>(this, ServerRowClass);
@@ -120,13 +160,28 @@ void UMainMenu::SetServerList(TArray<FOnlineSessionSearchResult>& ServerNames)
 		if (!ensure(ServerRow->ServerName != nullptr)) return;
 		
 
-		ServerRow->ServerName->SetText(FText::FromString(ServerName.GetSessionIdStr()));
+		ServerRow->ServerName->SetText(FText::FromString(ServerData.Name));
+		ServerRow->HostUser->SetText(FText::FromString(ServerData.HostUsername));
+		FString FracionText = FString::Printf(TEXT("%d/%d"), ServerData.CurrentPlayers, ServerData.MaxPlayers);
+		ServerRow->ConnectionFraction->SetText(FText::FromString(FracionText));
+
 		ServerRow->Setup(this, i);
 		++i;
 		ServerList->AddChild(ServerRow);
 	}
 }
 
+
+void UMainMenu::OpenHostMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OpenHostMenu called"));
+
+	if (!ensure(MenuSwitcher != nullptr)) return;
+	if (!ensure(HostMenu != nullptr)) return;
+
+	MenuSwitcher->SetActiveWidget(HostMenu);
+
+}
 
 
 void UMainMenu::OpenJoinMenu()

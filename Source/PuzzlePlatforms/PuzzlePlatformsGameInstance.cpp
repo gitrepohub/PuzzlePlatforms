@@ -14,6 +14,7 @@
 #include "MenuSystem/MenuWidget.h"
 
 const static FName SESSION_NAME = TEXT("My Session Game");
+const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
 
 UPuzzlePlatformsGameInstance::~UPuzzlePlatformsGameInstance()
@@ -131,10 +132,12 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 	if (!SessionInterface.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("session not valid")); return; }
 
 	FOnlineSessionSettings SessionSettings;
-	SessionSettings.bIsLANMatch = false; // true;
+	SessionSettings.bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL"); // true;
 	SessionSettings.NumPublicConnections = 2;
 	SessionSettings.bShouldAdvertise = true;
 	SessionSettings.bUsesPresence = true;
+	SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, HostName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+
 
 	auto bres = SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
 
@@ -142,12 +145,12 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 }
 
 
-void UPuzzlePlatformsGameInstance::Host()
+void UPuzzlePlatformsGameInstance::Host(const FString& InHostName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Host"));
 
 	if (!SessionInterface.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("session not valid")); return; }
-
+	HostName = InHostName;
 	auto session = SessionInterface->GetNamedSession(SESSION_NAME);
 	if (session != nullptr) {
 		// remove the current session and create a new session on callback
@@ -165,15 +168,30 @@ void UPuzzlePlatformsGameInstance::OnFindSessionsComplete(bool res)
 
 	if (!SessionSearch.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("SessionSearch not valid")); return; }
 
-	UE_LOG(LogTemp, Warning, TEXT("Numer of Sessions Found: %i"), SessionSearch->MaxSearchResults);
-	
-	for (const auto& result : SessionSearch->SearchResults) {
-		UE_LOG(LogTemp, Warning, TEXT("Found: %s"), *result.GetSessionIdStr());
+	if (Menu == nullptr) return;
+	TArray<FServerData> ServerNames;
+	for (const auto& SearchResult : SessionSearch->SearchResults)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Found Session Name: %s"), *SearchResult.GetSessionIdStr());
+		FServerData Data;
+		Data.Name = SearchResult.GetSessionIdStr();
+		Data.HostUsername = SearchResult.Session.OwningUserName;
+		Data.MaxPlayers = SearchResult.Session.SessionSettings.NumPublicConnections;
+		Data.CurrentPlayers = Data.MaxPlayers - SearchResult.Session.NumOpenPublicConnections;
+		FString FSData;
+		if (SearchResult.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, FSData))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Found Data: %s"), *FSData);
+			Data.Name = FSData;
+		} else {
+			UE_LOG(LogTemp, Warning, TEXT("No Data"));
+		}
+
+		ServerNames.Add(Data);
+
 	}
 
-	if (Menu == nullptr) return;
-
-	Menu->SetServerList(SessionSearch->SearchResults);
+	Menu->SetServerList(ServerNames);
 
 }
 
@@ -193,7 +211,7 @@ void UPuzzlePlatformsGameInstance::OnCreateSessionComplete(FName name, bool res)
 	auto World = GetWorld();
 	if (!ensure(World != nullptr)) return;
 
-	World->ServerTravel("/Game/ThirdPersonCPP/Maps/ThirdPersonExampleMap?listen"); //?listen
+	World->ServerTravel("/Game/PuzzlePlatforms/Maps/Lobby?listen"); //?listen
 
 }
 

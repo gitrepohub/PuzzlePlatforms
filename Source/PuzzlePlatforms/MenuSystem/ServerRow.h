@@ -20,6 +20,15 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* ServerName = nullptr;
 
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* HostUser = nullptr;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* ConnectionFraction = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool Selected = false;
+
 protected:
 	virtual bool Initialize() override;
 
