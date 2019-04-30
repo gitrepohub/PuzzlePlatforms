@@ -21,5 +21,9 @@ public:
 
 private:
 	uint32 NumberPlayers = 0;
+	FTimerHandle TimerHandler;
+
+	//timer callback
+	void ServerTravel();
 	
 };

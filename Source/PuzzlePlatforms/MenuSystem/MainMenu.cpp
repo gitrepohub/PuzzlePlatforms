@@ -135,7 +135,9 @@ void UMainMenu::SetServerList(TArray<FServerData>& ServerNames)
 	if (!ensure(ServerList != nullptr)) return;
 	ServerList->ClearChildren();
 
-	if (ServerNames.Num() <= 0) {
+	// TODO
+	// Set this to true for testing
+	if (false && ServerNames.Num() <= 0) {
 		uint32 i = 0;
 
 		while (i < 4) {

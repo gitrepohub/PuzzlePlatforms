@@ -13,7 +13,7 @@
 #include "MenuSystem/MainMenu.h"
 #include "MenuSystem/MenuWidget.h"
 
-const static FName SESSION_NAME = TEXT("My Session Game");
+const static FName SESSION_NAME = NAME_GameSession;
 const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
 
@@ -98,6 +98,16 @@ void UPuzzlePlatformsGameInstance::RefreshServerList()
 	}
 }
 
+void UPuzzlePlatformsGameInstance::StartSession()
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("StartSession"));
+
+	if (!SessionInterface.IsValid()) return;
+    
+	SessionInterface->StartSession(SESSION_NAME);
+}
+
 
 void UPuzzlePlatformsGameInstance::LoadMenu()
 {
@@ -133,7 +143,7 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 
 	FOnlineSessionSettings SessionSettings;
 	SessionSettings.bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL"); // true;
-	SessionSettings.NumPublicConnections = 2;
+	SessionSettings.NumPublicConnections = 5;
 	SessionSettings.bShouldAdvertise = true;
 	SessionSettings.bUsesPresence = true;
 	SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, HostName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
@@ -266,9 +276,13 @@ void UPuzzlePlatformsGameInstance::OnJoinSessionComplete(FName SessionName, EOnJ
 void UPuzzlePlatformsGameInstance::Join(const uint32& index)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UPuzzlePlatformsGameInstance Join called with %i"), index);
+	UE_LOG(LogTemp, Warning, TEXT("SessionInterface.IsValid() %s"), SessionInterface.IsValid() ? TEXT("YES") : TEXT("NO"));
+	UE_LOG(LogTemp, Warning, TEXT("SessionSearch.IsValid()) %s"), SessionSearch.IsValid() ? TEXT("YES") : TEXT("NO"));
+	UE_LOG(LogTemp, Warning, TEXT("SessionSearch->SearchResults.Num() %i"), SessionSearch->SearchResults.Num());
 
 	if (!SessionInterface.IsValid()) return;
 	if (!SessionSearch.IsValid()) return;
+	if (index >= (uint32)SessionSearch->SearchResults.Num()) return;
 
 	bool bResult = SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[index]);
 }
